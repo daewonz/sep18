@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ehr.web.board.BoardDAO">
+<select id="acount">
+SELECT COUNT(*)
+FROM annonyboard
+WHERE abdel = 1
+</select>
+
+<select id="alist" parameterType="Map" resultType="Map">
+SELECT ff.*
+FROM(
+SELECT CAST(@ROWNUM:=@ROWNUM+1 AS UNSIGNED) AS rowNum, bb.*
+
+FROM (SELECT  b.abno, b.abtitle, b.abdate, b.abread, b.abdel, b.abwrite, b.eno
+FROM annonyboard b) bb, (SELECT @ROWNUM:=0) AS R
+WHERE abdel=1
+ORDER BY bb.abno ASC
+) as ff JOIN employee e ON ff.eno=e.eno
+order by abno DESC
+LIMIT #{offset} , #{pageSize}
+</select>
+<insert id="awrite">
+	INSERT INTO annonyboard 
+	(abtitle, abwrite, abcontent, eno) 
+	VALUES(#{abtitle},#{abwrite},#{abcontent},#{eno})
+	
+</insert>
+<select id="adetail" parameterType="Integer" resultType="Map">
+SELECT ff.*
+FROM(
+SELECT CAST(@ROWNUM:=@ROWNUM+1 AS UNSIGNED) AS rowNum, bb.*
+FROM (SELECT  b.abno, b.abtitle, b.abdate, b.abread, b.abdel, b.abwrite, b.abcontent, b.eno
+FROM annonyboard b) bb, (SELECT @ROWNUM:=0) AS R
+WHERE bb.abdel=1
+ORDER BY bb.abno ASC
+) as ff JOIN employee e ON ff.eno=e.eno
+WHERE rowNum =#{num}
+</select>
+<update id="areadUp" parameterType="Integer">
+UPDATE annonyboard
+SET abread = abread+1
+where abno =#{abno}
+</update>
+<update id="adel" parameterType="Integer">
+update annonyboard
+set abdel = 0
+where abno = #{abno}
+</update>
+<update id="adetailUp" parameterType="Map">
+UPDATE annonyboard
+SET abtitle = #{abtitle}, abcontent=#{abcontent}
+WHERE abno = #{abno}
+</update>
+<select id="acheckEno" parameterType="Map" resultType="Integer">
+SELECT COUNT(*)
+FROM annonyboard
+WHERE abno=#{abno} AND eno =#{eno}
+</select>
+
+<select id="commentList" parameterType="Integer" resultType="Map">
+SELECT *
+FROM comments
+WHERE abno = #{abno} AND cdel = 1
+</select>
+<select id="commentCount" parameterType="Integer" resultType="Integer">
+SELECT COUNT(*) AS COUNT
+FROM comments
+WHERE abno = #{abno} AND cdel = 1
+</select>
+
+<insert id="comment" parameterType="Map">
+INSERT INTO comments (ccomment, cwrite, eno, abno, csecret <if test="c_self != null">,cself</if>)
+VALUES(#{comment}, #{writer}, #{eno}, #{abno}, #{secret}<if test="c_self != null">, 0</if>)
+</insert>
+</mapper>
